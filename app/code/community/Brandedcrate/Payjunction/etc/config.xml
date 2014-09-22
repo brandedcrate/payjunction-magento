@@ -7,13 +7,13 @@
     </modules>
     <global>
         <models>
-            <brandedcrate_payjunction>
+            <payjunction>
                 <class>Brandedcrate_Payjunction_Model</class>
                 <resourceModel>brandedcrate_payjunction_resource</resourceModel>
-            </brandedcrate_payjunction>
-            <brandedcrate_payjunction_resource>
+            </payjunction>
+            <payjunction_resource>
                 <class>Brandedcrate_Payjunction_Model_Resource</class>
-            </brandedcrate_payjunction_resource>
+            </payjunction_resource>
         </models>
         <blocks>
             <brandedcrate_payjunction>

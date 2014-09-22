@@ -5,8 +5,8 @@ app/etc/local.xml.additional
 app/etc/local.xml.template
 app/locale/
 app/code/core
-app/code/community
-!app/code/community/Brandedcrate
+app/code/community/CM/
+app/code/community/Phoenix/
 app/code/local
 app/design/adminhtml
 app/design/frontend/base
