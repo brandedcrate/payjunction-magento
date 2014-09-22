@@ -26,4 +26,22 @@
             </brandedcrate_payjunction>
         </helpers>
     </global>
+    <frontend>
+        <routers>
+            <brandedcrate_payjunction>
+                <use>standard</use>
+                <args>
+                    <module>Brandedcrate_Payjunction</module>
+                    <frontName>payjunction</frontName>
+                </args>
+            </brandedcrate_payjunction>
+        </routers>
+        <layout>
+            <updates>
+                <brandedcrate_payjunction>
+                    <file>payjunction.xml</file>
+                </brandedcrate_payjunction>
+            </updates>
+        </layout>
+    </frontend>
 </config>

@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<config>
+    <modules>
+        <Brandedcrate_Payjunction>
+            <active>true</active>
+            <codePool>community</codePool>
+        </Brandedcrate_Payjunction>
+    </modules>
+</config>
