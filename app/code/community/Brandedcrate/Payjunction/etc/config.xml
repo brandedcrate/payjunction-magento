@@ -16,16 +16,29 @@
             </payjunction_resource>
         </models>
         <blocks>
-            <brandedcrate_payjunction>
+            <payjunction>
                 <class>Brandedcrate_Payjunction_Block</class>
-            </brandedcrate_payjunction>
+            </payjunction>
         </blocks>
         <helpers>
-            <brandedcrate_payjunction>
+            <payjunction>
                 <class>Brandedcrate_Payjunction_Helper</class>
-            </brandedcrate_payjunction>
+            </payjunction>
         </helpers>
     </global>
+    <default>
+        <payment>
+            <payjunction>
+                <active>0</active>
+                <model>payjunction/creditCard</model>
+                <order_status>pending</order_status>
+                <title>Credit Card (Payjunction.com)</title>
+                <cctypes>AE,VI,MC,DI</cctypes>
+                <payment_action>authorize</payment_action>
+                <allowspecific>0</allowspecific>
+            </payjunction>
+        </payment>
+    </default>
     <frontend>
         <routers>
             <brandedcrate_payjunction>
