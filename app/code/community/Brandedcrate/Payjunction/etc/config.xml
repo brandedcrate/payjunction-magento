@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<config>
+    <modules>
+        <Brandedcrate_Payjunction>
+            <version>0.1.0</version>
+        </Brandedcrate_Payjunction>
+    </modules>
+    <global>
+        <models>
+            <brandedcrate_payjunction>
+                <class>Brandedcrate_Payjunction_Model</class>
+                <resourceModel>brandedcrate_payjunction_resource</resourceModel>
+            </brandedcrate_payjunction>
+            <brandedcrate_payjunction_resource>
+                <class>Brandedcrate_Payjunction_Model_Resource</class>
+            </brandedcrate_payjunction_resource>
+        </models>
+        <blocks>
+            <brandedcrate_payjunction>
+                <class>Brandedcrate_Payjunction_Block</class>
+            </brandedcrate_payjunction>
+        </blocks>
+        <helpers>
+            <brandedcrate_payjunction>
+                <class>Brandedcrate_Payjunction_Helper</class>
+            </brandedcrate_payjunction>
+        </helpers>
+    </global>
+</config>
