@@ -7,8 +7,16 @@ class Brandedcrate_Payjunction_Model_Client extends BrandedCrate\PayJunction\Cli
 
 
 
+    private function afterProcessResponse($response)
+    {
+        //@todo remove logging
+        Mage::log(print_r($response, true));
+        return $response;
+    }
+
     public function request()
     {
+
         switch ($this->_data['x_type']){
             case Brandedcrate_Payjunction_Model_CreditCard::REQUEST_TYPE_AUTH_CAPTURE:
                 //@todo figure out what it means to auth and capture from payjunction
@@ -21,19 +29,24 @@ class Brandedcrate_Payjunction_Model_Client extends BrandedCrate\PayJunction\Cli
                       'amountBase' => $this->getData('x_amount')
                   )
                 );
-                return $response;
+                return $this->afterProcessResponse($response);
             case Brandedcrate_Payjunction_Model_CreditCard::REQUEST_TYPE_AUTH_ONLY:
                 //@todo figure out how to do an auth only
-                $response = $this->transaction()->authorize(
+                $response = $this->transaction()->create(
                     array(
+                        'status' => 'HOLD',
                         'cardNumber' => $this->getData('x_card_num'),
                         'cardExpMonth' => $this->getData('x_exp_month'),
                         'cardExpYear' => $this->getData('x_exp_year'),
                         'cardCvv' => $this->getData('x_card_code'),
-                        'amountBase' => $this->getData('x_amount')
+                        'invoiceNumber' => $this->getData('x_invoice_num'),
+                        'purchaseOrderNumber' => $this->getData('x_po_num'),
+                        'avs' => $this->getData('x_po_num'),
+                        'amountBase' => 0.99
                     )
                 );
-                return $response;
+
+                return $this->afterProcessResponse($response);
             case Brandedcrate_Payjunction_Model_CreditCard::REQUEST_TYPE_CAPTURE_ONLY:
                 //@todo figure out what it means to only capture without an authorization
                 $response = $this->transaction()->create(
@@ -45,7 +58,7 @@ class Brandedcrate_Payjunction_Model_Client extends BrandedCrate\PayJunction\Cli
                         'amountBase' => $this->getData('x_amount')
                     )
                 );
-                return $response;
+                return $this->afterProcessResponse($response);
             case Brandedcrate_Payjunction_Model_CreditCard::REQUEST_TYPE_AUTH_CREDIT:
                 //@todo figure out how to process a credit "refund" through payjunction
                 return;
@@ -57,9 +70,62 @@ class Brandedcrate_Payjunction_Model_Client extends BrandedCrate\PayJunction\Cli
     }
 
 
-    public function getData($key)
+    public function getData($key='', $index=null)
     {
-        return isset($this->_data[$key]) ? $this->_data[$key] : null;
+        if (''===$key) {
+            return $this->_data;
+        }
+
+        $default = null;
+
+        // accept a/b/c as ['a']['b']['c']
+        if (strpos($key,'/')) {
+            $keyArr = explode('/', $key);
+            $data = $this->_data;
+            foreach ($keyArr as $i=>$k) {
+                if ($k==='') {
+                    return $default;
+                }
+                if (is_array($data)) {
+                    if (!isset($data[$k])) {
+                        return $default;
+                    }
+                    $data = $data[$k];
+                } elseif ($data instanceof Varien_Object) {
+                    $data = $data->getData($k);
+                } else {
+                    return $default;
+                }
+            }
+            return $data;
+        }
+
+        // legacy functionality for $index
+        if (isset($this->_data[$key])) {
+            if (is_null($index)) {
+                return $this->_data[$key];
+            }
+
+            $value = $this->_data[$key];
+            if (is_array($value)) {
+                //if (isset($value[$index]) && (!empty($value[$index]) || strlen($value[$index]) > 0)) {
+                /**
+                 * If we have any data, even if it empty - we should use it, anyway
+                 */
+                if (isset($value[$index])) {
+                    return $value[$index];
+                }
+                return null;
+            } elseif (is_string($value)) {
+                $arr = explode("\n", $value);
+                return (isset($arr[$index]) && (!empty($arr[$index]) || strlen($arr[$index]) > 0))
+                    ? $arr[$index] : null;
+            } elseif ($value instanceof Varien_Object) {
+                return $value->getData($index);
+            }
+            return $default;
+        }
+        return $default;
     }
 
 
@@ -69,10 +135,12 @@ class Brandedcrate_Payjunction_Model_Client extends BrandedCrate\PayJunction\Cli
      * @param $type
      * @return Brandedcrate_Payjunction_Model_Client
      */
-    public function setXType($type)
+    public function setXType($type = null)
     {
         $this->_data['x_type'] = $type;
+
         return $this;
+
     }
 
 
@@ -81,7 +149,7 @@ class Brandedcrate_Payjunction_Model_Client extends BrandedCrate\PayJunction\Cli
      * @param $method
      * @return Brandedcrate_Payjunction_Model_Client
      */
-    public function setXMethod($method)
+    public function setXMethod($method = null)
     {
         $this->_data['x_method'] = $method;
         return $this;
@@ -104,9 +172,9 @@ class Brandedcrate_Payjunction_Model_Client extends BrandedCrate\PayJunction\Cli
      * @param decimal $amount
      * @return Brandedcrate_Payjunction_Model_Client
      */
-    public function setXAmount(decimal $amount)
+    public function setXAmount($amount,$decimals = 2)
     {
-        $this->_data['x_amount'] = $amount;
+        $this->_data['x_amount'] = number_format($amount,$decimals);
         return $this;
     }
 

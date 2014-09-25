@@ -3,6 +3,8 @@
 class Brandedcrate_Payjunction_Model_CreditCard extends Mage_Payment_Model_Method_Cc
 {
 
+    const REQUEST_METHOD_CC     = 'CC';
+    const REQUEST_METHOD_ECHECK = 'ECHECK';
     const REQUEST_TYPE_AUTH_CAPTURE = 'AUTH_CAPTURE';
     const REQUEST_TYPE_AUTH_ONLY    = 'AUTH_ONLY';
     const REQUEST_TYPE_CAPTURE_ONLY = 'CAPTURE_ONLY';
@@ -33,6 +35,8 @@ class Brandedcrate_Payjunction_Model_CreditCard extends Mage_Payment_Model_Metho
      */
     public function capture(Varien_Object $payment, $amount)
     {
+
+
         //If the amount is less than or equal to 0 then it cannot be captured
         if ($amount <= 0) {
             Mage::throwException(Mage::helper('payjunction')->__('Invalid amount for capture.'));
@@ -42,15 +46,71 @@ class Brandedcrate_Payjunction_Model_CreditCard extends Mage_Payment_Model_Metho
         $payment->setSkipTransactionCreation(true);
         return $this;
     }
-    
+
+    /**
+     * Send authorize request to gateway
+     *
+     * @param  Mage_Payment_Model_Info $payment
+     * @param  decimal $amount
+     * @return Mage_Paygate_Model_Authorizenet
+     */
+    public function authorize(Varien_Object $payment, $amount)
+    {
+
+
+        if ($amount <= 0) {
+            Mage::throwException(Mage::helper('payjunction')->__('Invalid amount for authorization.'));
+        }
+
+        $this->_initCardsStorage($payment);
+
+
+        //@todo add partial authorization functionality
+//        if ($this->isPartialAuthorization($payment)) {
+//            $this->_partialAuthorization($payment, $amount, self::REQUEST_TYPE_AUTH_ONLY);
+//            $payment->setSkipTransactionCreation(true);
+//            return $this;
+//        }
+
+
+        $this->_place($payment, $amount, self::REQUEST_TYPE_AUTH_ONLY);
+        $payment->setSkipTransactionCreation(true);
+        return $this;
+    }
+
+    private function _getClientOptions()
+    {
+        $options = array(
+            'username' => Mage::getStoreConfig('payment/payjunction/username'),
+            'password' => Mage::getStoreConfig('payment/payjunction/password'),
+            'appkey'   => Mage::getStoreConfig('payment/payjunction/appkey'),
+            'endpoint' => Mage::getStoreConfig('payment/payjunction/endpoint') // 'test' or 'live'
+        );
+        return $options;
+    }
+
+
+
+
+
     private function _getClient()
     {
         //If client is not set or it is not an object then set it and return it
         if(!isset($this->_client) || !is_object($this->_client))
         {
-            $this->_client = Mage::getModel('payjunction/client');
+            $this->_client = Mage::getModel('payjunction/client',$this->_getClientOptions());
         }
         return $this->_client;
+    }
+
+    /**
+     * Init cards storage model
+     *
+     * @param Mage_Payment_Model_Info $payment
+     */
+    protected function _initCardsStorage($payment)
+    {
+        $this->_cardsStorage = Mage::getModel('payjunction/cards')->setPayment($payment);
     }
     
 
@@ -61,12 +121,16 @@ class Brandedcrate_Payjunction_Model_CreditCard extends Mage_Payment_Model_Metho
      */
     protected function _buildRequest(Varien_Object $payment)
     {
+
         $order = $payment->getOrder();
+
         $this->setStore($order->getStoreId());
 
+
         $client = $this->_getClient()
-            ->setXType($payment->getAnetTransType())
+            ->setXType($payment->getPayjunctionTransType())
             ->setXMethod(self::REQUEST_METHOD_CC);
+
 
         if ($order && $order->getIncrementId()) {
             $client->setXInvoiceNum($order->getIncrementId());
@@ -76,6 +140,7 @@ class Brandedcrate_Payjunction_Model_CreditCard extends Mage_Payment_Model_Metho
             $client->setXAmount($payment->getAmount(),2);
             $client->setXCurrencyCode($order->getBaseCurrencyCode());
         }
+
 
         switch ($payment->getPayjunctionTransType()) {
             case self::REQUEST_TYPE_AUTH_CAPTURE:
@@ -136,6 +201,7 @@ class Brandedcrate_Payjunction_Model_CreditCard extends Mage_Payment_Model_Metho
                     ->setXMerchantEmail($this->getConfigData('merchant_email'));
             }
 
+
             $shipping = $order->getShippingAddress();
             if (!empty($shipping)) {
                 $client->setXShipToFirstName($shipping->getFirstname())
@@ -172,32 +238,47 @@ class Brandedcrate_Payjunction_Model_CreditCard extends Mage_Payment_Model_Metho
      * @param Mage_Paygate_Model_Authorizenet_Request $request)
      * @return Mage_Paygate_Model_Authorizenet_Result
      */
-    protected function _postRequest(Varien_Object $client)
+    protected function _postRequest(Brandedcrate_Payjunction_Model_Client $client)
     {
         $debugData = array('client' => $client->getData());
         $result = Mage::getModel('payjunction/result');
-        $client->setEnpoint(Mage::getStoreConfig('payment/payjunction/endpoint'));
+        $client->setEndpoint(Mage::getStoreConfig('payment/payjunction/endpoint'));
 
 
-        try {
-            $response = $client->request();
-        } catch (Exception $e) {
+
+        $response = $client->request();
+
+
+        Mage::throwException($response->response->code);
+
+        if($response->response->code != '00') //If Transaction was declined
+        {
             $result->setResponseCode(-1)
-                ->setResponseReasonCode($e->getCode())
-                ->setResponseReasonText($e->getMessage());
+                ->setResponseReasonCode($response->response->code)
+                ->setResponseReasonText($response->response->message);
 
             $debugData['result'] = $result->getData();
             $this->_debug($debugData);
-            //@todo throw the exception
-//            Mage::throwException($this->_wrapGatewayError($e->getMessage()));
+            Mage::throwException($result->response->message);
         }
+
+
+
 
         //@todo deal with the response object and set codes accordingly
 //        $responseBody = $response->getBody();
 //
 //        $r = explode(self::RESPONSE_DELIM_CHAR, $responseBody);
 //
-//        if ($r) {
+        if (isset($response)) {
+
+            $result->setResponseCode($response->response->code);
+            $result->setResponseReasonCode($response->response->code);
+            $result->setResponseReasonText($response->response->message);
+            $result->setApprovalCode($response->response->processor->approvalCode);
+            $result->setAvsResultCode($response->response->processor->avs->status);
+            $result->setTransactionId($response->transactionId);
+        }
 //            $result->setResponseCode((int)str_replace('"','',$r[0]))
 //                ->setResponseSubcode((int)str_replace('"','',$r[1]))
 //                ->setResponseReasonCode((int)str_replace('"','',$r[2]))
@@ -232,9 +313,21 @@ class Brandedcrate_Payjunction_Model_CreditCard extends Mage_Payment_Model_Metho
 
         return $result;
     }
-    
-    
-    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     
     
 
@@ -250,13 +343,14 @@ class Brandedcrate_Payjunction_Model_CreditCard extends Mage_Payment_Model_Metho
     protected function _place($payment, $amount, $requestType)
     {
 
-        var_dump($requestType);
-        die();
+
 
         $payment->setPayjunctionTransType($requestType);
         $payment->setAmount($amount);
+
         $client = $this->_buildRequest($payment);
         $result = $this->_postRequest($client);
+
 
         switch ($requestType) {
             case self::REQUEST_TYPE_AUTH_ONLY:
