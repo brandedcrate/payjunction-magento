@@ -34,15 +34,46 @@ class Brandedcrate_Payjunction_Model_Client extends BrandedCrate\PayJunction\Cli
                 //@todo figure out how to do an auth only
                 $response = $this->transaction()->create(
                     array(
+                        'amountBase' => 0.99,
                         'status' => 'HOLD',
                         'cardNumber' => $this->getData('x_card_num'),
                         'cardExpMonth' => $this->getData('x_exp_month'),
                         'cardExpYear' => $this->getData('x_exp_year'),
-                        'cardCvv' => $this->getData('x_card_code'),
-                        'invoiceNumber' => $this->getData('x_invoice_num'),
+                        'cardCvv' => $this->getData('x_card_code') != null ? $this->getData('x_card_code') : $this->getData('x_auth_code'),
+                        'invoiceNumber' => rand(100000002,100000900), //@todo revert this back to $this->getData('x_invoice_num');
+//                        'amountShipping' => $this->getData('x_freight'),
+//                        'amountTax' => $this->getData('x_tax'),
                         'purchaseOrderNumber' => $this->getData('x_po_num'),
-                        'avs' => $this->getData('x_po_num'),
-                        'amountBase' => 0.99
+
+                        'avs' => Mage::getStoreConfig('payment/payjunction/avs'),
+                        'cvv' => Mage::getStoreConfig('payment/payjunction/cvv'),
+
+                        'billingIdentifier' => $this->getData('x_customer_id'),
+                        'billingFirstName' => $this->getData('x_first_name'),
+                        'billingLastName' => $this->getData('x_last_name'),
+                        'billingCompanyName' => $this->getData('x_company'),
+                        'billingPhone' => $this->getData('x_phone'),
+                        'billingAddress' => $this->getData('x_address'),
+                        'billingCity' => $this->getData('x_city'),
+                        'billingState' => $this->getData('x_state'),
+                        'billingZip' => $this->getData('x_zip'),
+                        'billingCountry' => $this->getData('x_country'),
+                        'billingEmail' => $this->getData('x_email'),
+
+                        'shippingIdentifier' => $this->getData('x_customer_id'),
+                        'shippingFirstName' => $this->getData('x_ship_to_first_name'),
+                        'shippingLastName' => $this->getData('x_ship_to_last_name'),
+                        'shippingCompanyName' => $this->getData('x_ship_to_company'),
+                        'shippingPhone' => $this->getData('x_ship_to_phone'),
+                        'shippingAddress' => $this->getData('x_ship_to_address'),
+                        'shippingCity' => $this->getData('x_ship_to_city'),
+                        'shippingState' => $this->getData('x_ship_to_state'),
+                        'shippingZip' => $this->getData('x_ship_to_zip'),
+                        'shippingCountry' => $this->getData('x_ship_to_country')
+
+
+
+
                     )
                 );
 
@@ -597,6 +628,18 @@ class Brandedcrate_Payjunction_Model_Client extends BrandedCrate\PayJunction\Cli
     public function setXCardCode($card_code)
     {
         $this->_data['x_card_code'] = $card_code;
+        return $this;
+    }
+
+
+    /**
+     * @description sets the customer id for the order
+     * @param $customer_id
+     * @return Brandedcrate_Payjunction_Model_Client
+     */
+    public function setXCustomerId($customer_id)
+    {
+        $this->_data['x_customer_id'] = $customer_id;
         return $this;
     }
 

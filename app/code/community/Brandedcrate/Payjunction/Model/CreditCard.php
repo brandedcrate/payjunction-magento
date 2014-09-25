@@ -3,6 +3,13 @@
 class Brandedcrate_Payjunction_Model_CreditCard extends Mage_Payment_Model_Method_Cc
 {
 
+    const RESPONSE_CODE_APPROVED = '00';
+    const RESPONSE_CODE_DECLINED = 2; //@todo not real
+    const RESPONSE_CODE_ERROR    = 3; //@todo not real
+    const RESPONSE_CODE_HELD     = 4; //@todo not real
+
+
+
     const REQUEST_METHOD_CC     = 'CC';
     const REQUEST_METHOD_ECHECK = 'ECHECK';
     const REQUEST_TYPE_AUTH_CAPTURE = 'AUTH_CAPTURE';
@@ -10,6 +17,7 @@ class Brandedcrate_Payjunction_Model_CreditCard extends Mage_Payment_Model_Metho
     const REQUEST_TYPE_CAPTURE_ONLY = 'CAPTURE_ONLY';
     const REQUEST_TYPE_CREDIT       = 'CREDIT';
     const REQUEST_TYPE_VOID         = 'VOID';
+    const REQUEST_TYPE_PRIOR_AUTH_CAPTURE = 'PRIOR_AUTH_CAPTURE';
 
 
     protected $_client;
@@ -181,6 +189,19 @@ class Brandedcrate_Payjunction_Model_CreditCard extends Mage_Payment_Model_Metho
 //        }
 
         if (!empty($order)) {
+
+            //Set the customer id for the order
+            if(Mage::getSingleton('core/session')->getVisitorData() == null)
+            {
+                $customer_data = Mage::getSingleton('core/session')->getVisitorData();
+                $client->setXCustomerId($customer_data['visitor_id']);
+            }else{
+                $client->setXCustomerId(Mage::getSingleton('customer/session')->getId());
+            }
+
+            //@todo test and make sure that a guest id will also work
+//            Mage::throwException($client->getData('x_customer_id'));
+
             $billing = $order->getBillingAddress();
             if (!empty($billing)) {
                 $client->setXFirstName($billing->getFirstname())
@@ -243,70 +264,54 @@ class Brandedcrate_Payjunction_Model_CreditCard extends Mage_Payment_Model_Metho
         $debugData = array('client' => $client->getData());
         $result = Mage::getModel('payjunction/result');
         $client->setEndpoint(Mage::getStoreConfig('payment/payjunction/endpoint'));
-
-
-
         $response = $client->request();
-
-
-        Mage::throwException($response->response->code);
 
         if($response->response->code != '00') //If Transaction was declined
         {
+
             $result->setResponseCode(-1)
                 ->setResponseReasonCode($response->response->code)
                 ->setResponseReasonText($response->response->message);
 
             $debugData['result'] = $result->getData();
             $this->_debug($debugData);
-            Mage::throwException($result->response->message);
+            //@todo try to come up with a more elegant way to throw error
+            Mage::throwException($response->response->message);
         }
 
 
-
-
-        //@todo deal with the response object and set codes accordingly
-//        $responseBody = $response->getBody();
-//
-//        $r = explode(self::RESPONSE_DELIM_CHAR, $responseBody);
-//
         if (isset($response)) {
 
-            $result->setResponseCode($response->response->code);
-            $result->setResponseReasonCode($response->response->code);
-            $result->setResponseReasonText($response->response->message);
-            $result->setApprovalCode($response->response->processor->approvalCode);
-            $result->setAvsResultCode($response->response->processor->avs->status);
-            $result->setTransactionId($response->transactionId);
+            //@todo turn this into a single run of method calls
+            $result->setResponseCode(isset($response->response->code)?$response->response->code:null);
+//            $result->setResponseSubcode();//@todo not sure what this is
+            $result->setResponseReasonCode(isset($response->response->code) ? $response->response->code : null);
+            $result->setResponseReasonText(isset($response->response->message) ? $response->response->message : null);
+            $result->setApprovalCode(isset($response->response->processor->approvalCode) ? $response->response->processor->approvalCode : null);
+            $result->setAvsResultCode(isset($response->response->processor->avs->status) ? $response->response->processor->avs->status : null); //@todo not sure if this is correct
+            $result->setTransactionId(isset($response->transactionId) ? $response->transactionId : null);
+            $result->setInvoiceNumber($response->invoiceNumber);
+//            $result->setDescription(); //@todo Not sure what this is
+            $result->setAmount(isset($response->amountTotal)?$response->amountTotal:null);
+            $result->setMethod(isset($response->status)?$response->status:null); //@todo I dont know if this and the next one should be flipped
+            $result->setTransactionType(isset($response->action)?$response->action:null);
+            $result->setCustomerId(isset($response->billing->identifier)?$response->billing->identifier:null);
+//            $result->Md5Hash(); //@todo not sure what this is
+//            $result->setCardCodeResponseCode() //@todo not sure what this is
+            $result->setCAVVResponseCode( (isset($response->response->processor->cvv->status) ? $response->response->processor->cvv->status : null)); //@todo not sure if this is correct
+//            $result->setSplitTenderId(); //@todo decide how to handle this
+//            $result->setAccNumber(); //@todo decide how to handle this
+            $result->setCardType(isset($response->vault->accountType)?$response->vault->accountType:null);
+            $result->setRequestedAmount(isset($response->amountTotal)?$response->amountTotal:null);//@todo decide if this is necessary
+            $result->setBalanceOnCard(0);//@todo not sure if this is correct
+
+        } else {
+            Mage::throwException(
+                Mage::helper('payjunction')->__('Error in payment gateway.')
+            );
         }
-//            $result->setResponseCode((int)str_replace('"','',$r[0]))
-//                ->setResponseSubcode((int)str_replace('"','',$r[1]))
-//                ->setResponseReasonCode((int)str_replace('"','',$r[2]))
-//                ->setResponseReasonText($r[3])
-//                ->setApprovalCode($r[4])
-//                ->setAvsResultCode($r[5])
-//                ->setTransactionId($r[6])
-//                ->setInvoiceNumber($r[7])
-//                ->setDescription($r[8])
-//                ->setAmount($r[9])
-//                ->setMethod($r[10])
-//                ->setTransactionType($r[11])
-//                ->setCustomerId($r[12])
-//                ->setMd5Hash($r[37])
-//                ->setCardCodeResponseCode($r[38])
-//                ->setCAVVResponseCode( (isset($r[39])) ? $r[39] : null)
-//                ->setSplitTenderId($r[52])
-//                ->setAccNumber($r[50])
-//                ->setCardType($r[51])
-//                ->setRequestedAmount($r[53])
-//                ->setBalanceOnCard($r[54])
-//            ;
-//        }
-//        else {
-//            Mage::throwException(
-//                Mage::helper('paygate')->__('Error in payment gateway.')
-//            );
-//        }
+        //@todo remove debug code
+        Mage::log(print_r($result, true));
 
         $debugData['result'] = $result->getData();
         $this->_debug($debugData);
@@ -315,21 +320,6 @@ class Brandedcrate_Payjunction_Model_CreditCard extends Mage_Payment_Model_Metho
     }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-    
 
     /**
      * Send request with new payment to gateway
@@ -367,68 +357,185 @@ class Brandedcrate_Payjunction_Model_CreditCard extends Mage_Payment_Model_Metho
             case self::RESPONSE_CODE_APPROVED:
                 $this->getCardsStorage($payment)->flushCards();
                 $card = $this->_registerCard($result, $payment);
+
+
                 $this->_addTransaction(
                     $payment,
                     $card->getLastTransId(),
                     $newTransactionType,
                     array('is_transaction_closed' => 0),
                     array($this->_realTransactionIdKey => $card->getLastTransId()),
-                    Mage::helper('paygate')->getTransactionMessage(
+                    Mage::helper('payjunction')->getTransactionMessage(
                         $payment, $requestType, $card->getLastTransId(), $card, $amount
                     )
                 );
+
+
+
                 if ($requestType == self::REQUEST_TYPE_AUTH_CAPTURE) {
                     $card->setCapturedAmount($card->getProcessedAmount());
                     $this->getCardsStorage($payment)->updateCard($card);
                 }
                 return $this;
-            case self::RESPONSE_CODE_HELD:
-                if ($result->getResponseReasonCode() == self::RESPONSE_REASON_CODE_PENDING_REVIEW_AUTHORIZED
-                    || $result->getResponseReasonCode() == self::RESPONSE_REASON_CODE_PENDING_REVIEW
-                ) {
-                    $card = $this->_registerCard($result, $payment);
-                    $this->_addTransaction(
-                        $payment,
-                        $card->getLastTransId(),
-                        $newTransactionType,
-                        array('is_transaction_closed' => 0),
-                        array(
-                            $this->_realTransactionIdKey => $card->getLastTransId(),
-                            $this->_isTransactionFraud => true
-                        ),
-                        Mage::helper('paygate')->getTransactionMessage(
-                            $payment, $requestType, $card->getLastTransId(), $card, $amount
-                        )
-                    );
-                    if ($requestType == self::REQUEST_TYPE_AUTH_CAPTURE) {
-                        $card->setCapturedAmount($card->getProcessedAmount());
-                        $this->getCardsStorage()->updateCard($card);
-                    }
-                    $payment
-                        ->setIsTransactionPending(true)
-                        ->setIsFraudDetected(true);
-                    return $this;
-                }
-                if ($result->getResponseReasonCode() == self::RESPONSE_REASON_CODE_PARTIAL_APPROVE) {
-                    $checksum = $this->_generateChecksum($request, $this->_partialAuthorizationChecksumDataKeys);
-                    $this->_getSession()->setData($this->_partialAuthorizationChecksumSessionKey, $checksum);
-                    if ($this->_processPartialAuthorizationResponse($result, $payment)) {
-                        return $this;
-                    }
-                }
-                Mage::throwException($defaultExceptionMessage);
+
+            //@todo figure out what it means to have a held transaction
+//            case self::RESPONSE_CODE_HELD:
+//                if ($result->getResponseReasonCode() == self::RESPONSE_REASON_CODE_PENDING_REVIEW_AUTHORIZED
+//                    || $result->getResponseReasonCode() == self::RESPONSE_REASON_CODE_PENDING_REVIEW
+//                ) {
+//                    $card = $this->_registerCard($result, $payment);
+//                    $this->_addTransaction(
+//                        $payment,
+//                        $card->getLastTransId(),
+//                        $newTransactionType,
+//                        array('is_transaction_closed' => 0),
+//                        array(
+//                            $this->_realTransactionIdKey => $card->getLastTransId(),
+//                            $this->_isTransactionFraud => true
+//                        ),
+//                        Mage::helper('paygate')->getTransactionMessage(
+//                            $payment, $requestType, $card->getLastTransId(), $card, $amount
+//                        )
+//                    );
+//                    if ($requestType == self::REQUEST_TYPE_AUTH_CAPTURE) {
+//                        $card->setCapturedAmount($card->getProcessedAmount());
+//                        $this->getCardsStorage()->updateCard($card);
+//                    }
+//                    $payment
+//                        ->setIsTransactionPending(true)
+//                        ->setIsFraudDetected(true);
+//                    return $this;
+//                }
+//                if ($result->getResponseReasonCode() == self::RESPONSE_REASON_CODE_PARTIAL_APPROVE) {
+//                    $checksum = $this->_generateChecksum($request, $this->_partialAuthorizationChecksumDataKeys);
+//                    $this->_getSession()->setData($this->_partialAuthorizationChecksumSessionKey, $checksum);
+//                    if ($this->_processPartialAuthorizationResponse($result, $payment)) {
+//                        return $this;
+//                    }
+//                }
+//                Mage::throwException($defaultExceptionMessage);
             case self::RESPONSE_CODE_DECLINED:
             case self::RESPONSE_CODE_ERROR:
-                Mage::throwException($this->_wrapGatewayError($result->getResponseReasonText()));
+                Mage::throwException($result->getResponseReasonText());
             default:
                 Mage::throwException($defaultExceptionMessage);
         }
+        Mage::throwException('continue');
         return $this;
     }
 
 
 
+    /**
+     * Return cards storage model
+     *
+     * @param Mage_Payment_Model_Info $payment
+     * @return Brandedcrate_Payjunction_Model_Cards
+     */
+    public function getCardsStorage($payment = null)
+    {
+        if (is_null($payment)) {
+            $payment = $this->getInfoInstance();
+        }
+        if (is_null($this->_cardsStorage)) {
+            $this->_initCardsStorage($payment);
+        }
+        return $this->_cardsStorage;
+    }
 
+
+
+    /**
+     * It sets card`s data into additional information of payment model
+     *
+     * @param Brandedcrate_Payjunction_Model_Result $response
+     * @param Mage_Sales_Model_Order_Payment $payment
+     * @return Varien_Object
+     */
+    protected function _registerCard(Varien_Object $response, Mage_Sales_Model_Order_Payment $payment)
+    {
+        $cardsStorage = $this->getCardsStorage($payment);
+        $card = $cardsStorage->registerCard();
+
+        $card
+            ->setRequestedAmount($response->getRequestedAmount())
+            ->setBalanceOnCard($response->getBalanceOnCard())
+            ->setLastTransId($response->getTransactionId())
+            ->setProcessedAmount($response->getAmount())
+            ->setCcType($payment->getCcType())
+            ->setCcOwner($payment->getCcOwner())
+            ->setCcLast4($payment->getCcLast4())
+            ->setCcExpMonth($payment->getCcExpMonth())
+            ->setCcExpYear($payment->getCcExpYear())
+            ->setCcSsIssue($payment->getCcSsIssue())
+            ->setCcSsStartMonth($payment->getCcSsStartMonth())
+            ->setCcSsStartYear($payment->getCcSsStartYear());
+
+        $cardsStorage->updateCard($card);
+        $this->_clearAssignedData($payment);
+        return $card;
+    }
+
+    /**
+     * Reset assigned data in payment info model
+     *
+     * @param Mage_Payment_Model_Info
+     * @return Brandedcrate_Payjunction_Model_CreditCard
+     */
+    private function _clearAssignedData($payment)
+    {
+
+        //@todo uncomment these lines
+//        $payment->setCcType(null)
+//            ->setCcOwner(null)
+//            ->setCcLast4(null)
+//            ->setCcNumber(null)
+//            ->setCcCid(null)
+//            ->setCcExpMonth(null)
+//            ->setCcExpYear(null)
+//            ->setCcSsIssue(null)
+//            ->setCcSsStartMonth(null)
+//            ->setCcSsStartYear(null)
+//        ;
+        return $this;
+    }
+
+
+
+    /**
+     * Add payment transaction
+     *
+     * @param Mage_Sales_Model_Order_Payment $payment
+     * @param string $transactionId
+     * @param string $transactionType
+     * @param array $transactionDetails
+     * @param array $transactionAdditionalInfo
+     * @return null|Mage_Sales_Model_Order_Payment_Transaction
+     */
+    protected function _addTransaction(Mage_Sales_Model_Order_Payment $payment, $transactionId, $transactionType,
+                                       array $transactionDetails = array(), array $transactionAdditionalInfo = array(), $message = false
+    ) {
+        $payment->setTransactionId($transactionId);
+        $payment->resetTransactionAdditionalInfo();
+        foreach ($transactionDetails as $key => $value) {
+            $payment->setData($key, $value);
+        }
+        foreach ($transactionAdditionalInfo as $key => $value) {
+            $payment->setTransactionAdditionalInfo($key, $value);
+        }
+        $transaction = $payment->addTransaction($transactionType, null, false , $message);
+        foreach ($transactionDetails as $key => $value) {
+            $payment->unsetData($key);
+        }
+        $payment->unsLastTransId();
+
+        /**
+         * It for self using
+         */
+        $transaction->setMessage($message);
+
+        return $transaction;
+    }
 
 
 

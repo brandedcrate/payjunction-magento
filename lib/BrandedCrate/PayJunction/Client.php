@@ -31,16 +31,7 @@ class Client
 
     public function readPackageVersion()
     {
-        $composerJsonPath = dirname(__FILE__) . DIRECTORY_SEPARATOR .
-            '..' . DIRECTORY_SEPARATOR .
-            '..' . DIRECTORY_SEPARATOR .
-            '..' . DIRECTORY_SEPARATOR .
-            'composer.json';
-
-        $composerJson = file_get_contents($composerJsonPath);
-        $composer = json_decode($composerJson);
-
-        return $composer->version;
+        return 1.0;
     }
 
     public function setEndpoint($endpoint)
@@ -52,6 +43,7 @@ class Client
         } elseif (is_string($endpoint)) {
             $this->endpoint = $endpoint;
         }
+        return $this;
     }
 
     /**
