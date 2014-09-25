@@ -19,28 +19,18 @@ class Brandedcrate_Payjunction_Model_Client extends BrandedCrate\PayJunction\Cli
 
         switch ($this->_data['x_type']){
             case Brandedcrate_Payjunction_Model_CreditCard::REQUEST_TYPE_AUTH_CAPTURE:
+                Mage::log('AUTH CAPTURE TRANSACTION', true); //@todo remove debug code
                 //@todo figure out what it means to auth and capture from payjunction
                 $response = $this->transaction()->create(
                   array(
+                      'amountBase' => 0.99, //@todo change this to $this->getData('x_amount')
+                      'status' => 'CAPTURE',
+                      'action' => 'CHARGE',
                       'cardNumber' => $this->getData('x_card_num'),
                       'cardExpMonth' => $this->getData('x_exp_month'),
                       'cardExpYear' => $this->getData('x_exp_year'),
-                      'cardCvv' => $this->getData('x_card_code'),
-                      'amountBase' => $this->getData('x_amount')
-                  )
-                );
-                return $this->afterProcessResponse($response);
-            case Brandedcrate_Payjunction_Model_CreditCard::REQUEST_TYPE_AUTH_ONLY:
-                //@todo figure out how to do an auth only
-                $response = $this->transaction()->create(
-                    array(
-                        'amountBase' => 0.99,
-                        'status' => 'HOLD',
-                        'cardNumber' => $this->getData('x_card_num'),
-                        'cardExpMonth' => $this->getData('x_exp_month'),
-                        'cardExpYear' => $this->getData('x_exp_year'),
-                        'cardCvv' => $this->getData('x_card_code') != null ? $this->getData('x_card_code') : $this->getData('x_auth_code'),
-                        'invoiceNumber' => rand(100000002,100000900), //@todo revert this back to $this->getData('x_invoice_num');
+                      'cardCvv' => $this->getData('x_card_code') != null ? $this->getData('x_card_code') : $this->getData('x_auth_code'),
+                      'invoiceNumber' => $this->getData('x_invoice_num'),
 //                        'amountShipping' => $this->getData('x_freight'),
 //                        'amountTax' => $this->getData('x_tax'),
                         'purchaseOrderNumber' => $this->getData('x_po_num'),
@@ -70,32 +60,120 @@ class Brandedcrate_Payjunction_Model_Client extends BrandedCrate\PayJunction\Cli
                         'shippingState' => $this->getData('x_ship_to_state'),
                         'shippingZip' => $this->getData('x_ship_to_zip'),
                         'shippingCountry' => $this->getData('x_ship_to_country')
+                  )
+                );
+                return $this->afterProcessResponse($response);
+            case Brandedcrate_Payjunction_Model_CreditCard::REQUEST_TYPE_AUTH_ONLY:
+                Mage::log('AUTH ONLY', true); //@todo remove debug code
+                //@todo figure out how to do an auth only
+                $response = $this->transaction()->create(
+                    array(
+                        'amountBase' => 0.99, //@todo change this to $this->getData('x_amount')
+                        'status' => 'HOLD',
+                        'action' => 'CHARGE',
+                        'cardNumber' => $this->getData('x_card_num'),
+                        'cardExpMonth' => $this->getData('x_exp_month'),
+                        'cardExpYear' => $this->getData('x_exp_year'),
+                        'cardCvv' => $this->getData('x_card_code') != null ? $this->getData('x_card_code') : $this->getData('x_auth_code'),
+                        'invoiceNumber' => $this->getData('x_invoice_num'),
+//                        'amountShipping' => $this->getData('x_freight'),
+//                        'amountTax' => $this->getData('x_tax'),
+                        'purchaseOrderNumber' => $this->getData('x_po_num'),
 
+                        'avs' => Mage::getStoreConfig('payment/payjunction/avs'),
+                        'cvv' => Mage::getStoreConfig('payment/payjunction/cvv'),
 
+                        'billingIdentifier' => $this->getData('x_customer_id'),
+                        'billingFirstName' => $this->getData('x_first_name'),
+                        'billingLastName' => $this->getData('x_last_name'),
+                        'billingCompanyName' => $this->getData('x_company'),
+                        'billingPhone' => $this->getData('x_phone'),
+                        'billingAddress' => $this->getData('x_address'),
+                        'billingCity' => $this->getData('x_city'),
+                        'billingState' => $this->getData('x_state'),
+                        'billingZip' => $this->getData('x_zip'),
+                        'billingCountry' => $this->getData('x_country'),
+                        'billingEmail' => $this->getData('x_email'),
 
-
+                        'shippingIdentifier' => $this->getData('x_customer_id'),
+                        'shippingFirstName' => $this->getData('x_ship_to_first_name'),
+                        'shippingLastName' => $this->getData('x_ship_to_last_name'),
+                        'shippingCompanyName' => $this->getData('x_ship_to_company'),
+                        'shippingPhone' => $this->getData('x_ship_to_phone'),
+                        'shippingAddress' => $this->getData('x_ship_to_address'),
+                        'shippingCity' => $this->getData('x_ship_to_city'),
+                        'shippingState' => $this->getData('x_ship_to_state'),
+                        'shippingZip' => $this->getData('x_ship_to_zip'),
+                        'shippingCountry' => $this->getData('x_ship_to_country')
                     )
                 );
 
                 return $this->afterProcessResponse($response);
             case Brandedcrate_Payjunction_Model_CreditCard::REQUEST_TYPE_CAPTURE_ONLY:
+                Mage::log('CAPTURE ONLY', true); //@todo remove debug code
                 //@todo figure out what it means to only capture without an authorization
                 $response = $this->transaction()->create(
                     array(
+                        'amountBase' => 0.99, //@todo change this to $this->getData('x_amount')
+                        'status' => 'CAPTURE',
+                        'action' => 'CHARGE',
                         'cardNumber' => $this->getData('x_card_num'),
                         'cardExpMonth' => $this->getData('x_exp_month'),
                         'cardExpYear' => $this->getData('x_exp_year'),
-                        'cardCvv' => $this->getData('x_card_code'),
-                        'amountBase' => $this->getData('x_amount')
+                        'cardCvv' => $this->getData('x_card_code') != null ? $this->getData('x_card_code') : $this->getData('x_auth_code'),
+                        'invoiceNumber' => $this->getData('x_invoice_num'),
+//                        'amountShipping' => $this->getData('x_freight'),
+//                        'amountTax' => $this->getData('x_tax'),
+                        'purchaseOrderNumber' => $this->getData('x_po_num'),
+
+                        'avs' => Mage::getStoreConfig('payment/payjunction/avs'),
+                        'cvv' => Mage::getStoreConfig('payment/payjunction/cvv'),
+
+                        'billingIdentifier' => $this->getData('x_customer_id'),
+                        'billingFirstName' => $this->getData('x_first_name'),
+                        'billingLastName' => $this->getData('x_last_name'),
+                        'billingCompanyName' => $this->getData('x_company'),
+                        'billingPhone' => $this->getData('x_phone'),
+                        'billingAddress' => $this->getData('x_address'),
+                        'billingCity' => $this->getData('x_city'),
+                        'billingState' => $this->getData('x_state'),
+                        'billingZip' => $this->getData('x_zip'),
+                        'billingCountry' => $this->getData('x_country'),
+                        'billingEmail' => $this->getData('x_email'),
+
+                        'shippingIdentifier' => $this->getData('x_customer_id'),
+                        'shippingFirstName' => $this->getData('x_ship_to_first_name'),
+                        'shippingLastName' => $this->getData('x_ship_to_last_name'),
+                        'shippingCompanyName' => $this->getData('x_ship_to_company'),
+                        'shippingPhone' => $this->getData('x_ship_to_phone'),
+                        'shippingAddress' => $this->getData('x_ship_to_address'),
+                        'shippingCity' => $this->getData('x_ship_to_city'),
+                        'shippingState' => $this->getData('x_ship_to_state'),
+                        'shippingZip' => $this->getData('x_ship_to_zip'),
+                        'shippingCountry' => $this->getData('x_ship_to_country')
                     )
                 );
                 return $this->afterProcessResponse($response);
-            case Brandedcrate_Payjunction_Model_CreditCard::REQUEST_TYPE_AUTH_CREDIT:
-                //@todo figure out how to process a credit "refund" through payjunction
-                return;
-            case Brandedcrate_Payjunction_Model_CreditCard::REQUEST_TYPE_AUTH_VOID:
-                //@todo figure out how to connect the mage transaction with a transaction id from payjunction
-                return;
+            case Brandedcrate_Payjunction_Model_CreditCard::REQUEST_TYPE_CREDIT:
+                Mage::log('REFUND TRANSACTION', true); //@todo remove debug code
+                //@todo debug and make sure this is working
+                $response = $this->transaction()->update($this->getData('x_trans_id'),
+                    array(
+                        'amountBase' => 0.99, //@todo change this to $this->getData('x_amount')
+                        'action' => 'REFUND',
+                    )
+                );
+
+                return $this->afterProcessResponse($response);
+            case Brandedcrate_Payjunction_Model_CreditCard::REQUEST_TYPE_VOID:
+                Mage::log('VOIDING TRANSACTION', true); //@todo remove debug code
+//                @todo debug and make sure this is working
+                $response = $this->transaction()->update($this->getData('x_trans_id'),
+                    array(
+                        'status' => 'VOID',
+                    )
+                );
+                return $this->afterProcessResponse($response);
 
         }
     }
@@ -643,5 +721,17 @@ class Brandedcrate_Payjunction_Model_Client extends BrandedCrate\PayJunction\Cli
         return $this;
     }
 
+
+
+    /**
+     * @description sets the transaction id
+     * @param $transaction_id
+     * @return Brandedcrate_Payjunction_Model_Client
+     */
+    public function setXTransId($transaction_id)
+    {
+        $this->_data['x_trans_id'] = $transaction_id;
+        return $this;
+    }
 
 }

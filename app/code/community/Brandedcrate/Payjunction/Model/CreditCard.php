@@ -9,6 +9,14 @@ class Brandedcrate_Payjunction_Model_CreditCard extends Mage_Payment_Model_Metho
     const RESPONSE_CODE_HELD     = 4; //@todo not real
 
 
+    const RESPONSE_REASON_CODE_APPROVED = 00;
+    const RESPONSE_REASON_CODE_NOT_FOUND = 16;
+    const RESPONSE_REASON_CODE_PARTIAL_APPROVE = 295;
+    const RESPONSE_REASON_CODE_PENDING_REVIEW_AUTHORIZED = 252;
+    const RESPONSE_REASON_CODE_PENDING_REVIEW = 253;
+    const RESPONSE_REASON_CODE_PENDING_REVIEW_DECLINED = 254;
+
+
 
     const REQUEST_METHOD_CC     = 'CC';
     const REQUEST_METHOD_ECHECK = 'ECHECK';
@@ -32,6 +40,155 @@ class Brandedcrate_Payjunction_Model_CreditCard extends Mage_Payment_Model_Metho
     protected $_canUseCheckout = true; //can use payment metod on frontend
     protected $_canUseForMultishipping = true; //suitable for multi-shipping
     protected $_canSaveCC = false;
+
+
+    /**
+     * Void the payment through gateway
+     *
+     * @param  Mage_Payment_Model_Info $payment
+     * @return Brandedcrate_Payjunction_Model_CreditCard
+     */
+    public function void(Varien_Object $payment)
+    {
+
+
+        $cardsStorage = $this->getCardsStorage($payment);
+
+        $messages = array();
+        $isSuccessful = false;
+        $isFiled = false;
+        foreach($cardsStorage->getCards() as $card) {
+            try {
+                $newTransaction = $this->_voidCardTransaction($payment, $card);
+
+                $messages[] = $newTransaction->getMessage();
+                $isSuccessful = true;
+            } catch (Exception $e) {
+                Mage::throwException($e->getMessage()); //@todo debug code remove this line
+                $messages[] = $e->getMessage();
+                $isFiled = true;
+                continue;
+            }
+            $cardsStorage->updateCard($card);
+        }
+
+        if ($isFiled) {
+            $this->_processFailureMultitransactionAction($payment, $messages, $isSuccessful);
+        }
+
+        $payment->setSkipTransactionCreation(true);
+        return $this;
+    }
+
+
+    /**
+     * Void the card transaction through gateway
+     *
+     * @param Mage_Payment_Model_Info $payment
+     * @param Varien_Object $card
+     * @return Mage_Sales_Model_Order_Payment_Transaction
+     */
+    protected function _voidCardTransaction($payment, $card)
+    {
+
+        $authTransactionId = $card->getLastTransId();
+
+
+        $authTransaction = $payment->getTransaction($authTransactionId);
+
+//        Mage::log(print_r($authTransaction->getData(), true)); //@todo remove debug code
+
+
+
+        $realAuthTransactionId = $authTransaction->getAdditionalInformation($this->_realTransactionIdKey);
+
+
+        Mage::log(print_r($realAuthTransactionId), true); //@todo remove debug code
+
+
+        $payment->setPayjunctionTransType(self::REQUEST_TYPE_VOID);
+        $payment->setXTransId($authTransactionId); //@todo ensure this is correct authorize uses $payment->setXTransId($realAuthTransactionId);
+
+        $request= $this->_buildRequest($payment);
+        $result = $this->_postRequest($request);
+
+
+        Mage::log(print_r($result), true); //@todo remove debug code
+
+
+
+        switch ($result->getResponseCode()) {
+
+
+            case self::RESPONSE_CODE_APPROVED:
+                if ($result->getResponseReasonCode() == self::RESPONSE_REASON_CODE_APPROVED) {
+                    Mage::log('approved', true); //@todo remove debug code
+                    $voidTransactionId = $result->getTransactionId() . '-void';
+                    $card->setLastTransId($voidTransactionId);
+                    return $this->_addTransaction(
+                        $payment,
+                        $voidTransactionId,
+                        Mage_Sales_Model_Order_Payment_Transaction::TYPE_VOID,
+                        array(
+                            'is_transaction_closed' => 1,
+                            'should_close_parent_transaction' => 1,
+                            'parent_transaction_id' => $authTransactionId //@todo not sure if this is correct , mage uses $authTransactionId I think they have been flip flopped
+                        ),
+
+
+                        array($this->_realTransactionIdKey => $result->getTransactionId()),
+                        Mage::helper('payjunction')->getTransactionMessage(
+                            $payment, self::REQUEST_TYPE_VOID, $result->getTransactionId(), $card
+                        )
+                    );
+
+                }
+                $exceptionMessage = $result->getResponseReasonText();
+                break;
+            case self::RESPONSE_CODE_DECLINED:
+//            case self::RESPONSE_CODE_ERROR:
+//                if ($result->getResponseReasonCode() == self::RESPONSE_REASON_CODE_NOT_FOUND
+//                    && $this->_isTransactionExpired($authTransactionId)
+//                ) {
+//                    $voidTransactionId = $realAuthTransactionId . '-void';
+//                    return $this->_addTransaction(
+//                        $payment,
+//                        $voidTransactionId,
+//                        Mage_Sales_Model_Order_Payment_Transaction::TYPE_VOID,
+//                        array(
+//                            'is_transaction_closed' => 1,
+//                            'should_close_parent_transaction' => 1,
+//                            'parent_transaction_id' => $authTransactionId
+//                        ),
+//                        array(),
+//                        Mage::helper('paygate')->getExtendedTransactionMessage(
+//                            $payment,
+//                            self::REQUEST_TYPE_VOID,
+//                            null,
+//                            $card,
+//                            false,
+//                            false,
+//                            Mage::helper('paygate')->__('Parent Authorize.Net transaction (ID %s) expired', $realAuthTransactionId)
+//                        )
+//                    );
+//                }
+//                $exceptionMessage = $this->_wrapGatewayError($result->getResponseReasonText());
+//                break; //@todo may need to use this
+            default:
+                $exceptionMessage = Mage::helper('payjunction')->__('Payment voiding error.');
+                break;
+        }
+
+        $exceptionMessage = Mage::helper('payjunction')->getTransactionMessage(
+            $payment, self::REQUEST_TYPE_VOID, $realAuthTransactionId, $card, false, $exceptionMessage
+        );
+        Mage::throwException($exceptionMessage);
+    }
+
+
+
+
+
 
 
     /**
@@ -332,8 +489,7 @@ class Brandedcrate_Payjunction_Model_CreditCard extends Mage_Payment_Model_Metho
      */
     protected function _place($payment, $amount, $requestType)
     {
-
-
+//        Mage::throwException($requestType);
 
         $payment->setPayjunctionTransType($requestType);
         $payment->setAmount($amount);
