@@ -309,6 +309,7 @@ class Brandedcrate_Payjunction_Model_CreditCard extends Mage_Payment_Model_Metho
 
         switch ($payment->getPayjunctionTransType()) {
             case self::REQUEST_TYPE_AUTH_CAPTURE:
+                $client->setXTransId($payment->parent_transaction_id);
                 $client->setXAllowPartialAuth($this->getConfigData('allow_partial_authorization') ? 'True' : 'False');
                 if ($payment->getAdditionalInformation($this->_splitTenderIdKey)) {
                     $client->setXSplitTenderId($payment->getAdditionalInformation($this->_splitTenderIdKey));
