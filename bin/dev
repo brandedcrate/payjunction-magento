@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+if [ -f "$1/mage" ]
+then
+  echo "$1 appears to be a magento"
+else
+  echo "No magentos found in $1"
+  exit 1
+fi
+
+DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+
+link1="app/code/community/Brandedcrate"
+echo "Linking $link1"
+rm -f "$1/$link1"
+ln -s "$DIR/../$link1" "$1/$link1"
+
+link2="app/etc/modules/Brandedcrate_Payjunction.xml"
+echo "Linking $link2"
+rm -f "$1/$link2"
+ln -s "$DIR/../$link2" "$1/$link2"
+
+echo "done"
+
+exit 0

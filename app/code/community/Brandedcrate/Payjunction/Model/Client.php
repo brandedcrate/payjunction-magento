@@ -1,10 +1,13 @@
 <?php
 
-require_once(Mage::getBaseDir('lib') . '/BrandedCrate/PayJunction/Client.php');
-require_once(Mage::getBaseDir('lib') . '/BrandedCrate/PayJunction/Exception.php');
-require_once(Mage::getBaseDir('lib') . '/BrandedCrate/PayJunction/TransactionClient.php');
-require_once(Mage::getBaseDir('lib') . '/BrandedCrate/PayJunction/ReceiptClient.php');
-require_once(Mage::getBaseDir('lib') . '/BrandedCrate/PayJunction/CustomerClient.php');
+$codeRoot = Mage::getModuleDir('code', 'Brandedcrate_Payjunction');
+$clientPath = 'client/lib/BrandedCrate/PayJunction';
+
+require_once "$codeRoot/$clientPath/Client.php";
+require_once "$codeRoot/$clientPath/Exception.php";
+require_once "$codeRoot/$clientPath/TransactionClient.php";
+require_once "$codeRoot/$clientPath/ReceiptClient.php";
+require_once "$codeRoot/$clientPath/CustomerClient.php";
 
 class Brandedcrate_Payjunction_Model_Client extends BrandedCrate\PayJunction\Client
 {

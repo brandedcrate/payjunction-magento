@@ -1,0 +1,19 @@
+{
+    "name": "brandedcrate/payjunction-magento",
+    "authors": [
+        {
+            "name": "Stephen Crosby",
+            "email": "stephen@brandedcrate.com"
+        }
+    ],
+    "require": {
+        "pulsestorm/magento-tar-to-connect": "dev-master",
+        "brandedcrate/payjunction": "*"
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url":  "git@github.com:astorm/MagentoTarToConnect.git"
+        }
+    ]
+}

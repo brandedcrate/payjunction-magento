@@ -1,0 +1,104 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
+        "This file is @generated automatically"
+    ],
+    "hash": "f2792c4e8b6e4c9ae63da87b68f2e3fa",
+    "packages": [
+        {
+            "name": "brandedcrate/payjunction",
+            "version": "0.3.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/brandedcrate/payjunction-php.git",
+                "reference": "8ed4c8bcb4b7832caaf9309d798ba8c1ff23b79c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/brandedcrate/payjunction-php/zipball/8ed4c8bcb4b7832caaf9309d798ba8c1ff23b79c",
+                "reference": "8ed4c8bcb4b7832caaf9309d798ba8c1ff23b79c",
+                "shasum": ""
+            },
+            "require-dev": {
+                "phpunit/phpunit": "3.7.14",
+                "squizlabs/php_codesniffer": "1.*"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "": "lib"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Andrew Wolf",
+                    "email": "a.james.wolf@gmail.com",
+                    "homepage": "http://www.gitscripts.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "PayJunction API client for PHP",
+            "homepage": "https://github.com/brandedcrate/payjunction-php",
+            "keywords": [
+                "api",
+                "client",
+                "gateway",
+                "payjunction",
+                "payments"
+            ],
+            "time": "2014-09-12 00:00:00"
+        },
+        {
+            "name": "pulsestorm/magento-tar-to-connect",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/astorm/MagentoTarToConnect.git",
+                "reference": "9214251c60ee4a35f68545ee0a00faa380271f5b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/astorm/MagentoTarToConnect/zipball/9214251c60ee4a35f68545ee0a00faa380271f5b",
+                "reference": "9214251c60ee4a35f68545ee0a00faa380271f5b",
+                "shasum": ""
+            },
+            "require-dev": {
+                "pear/archive_tar": "1.3.*",
+                "phpunit/phpunit": "4.2.*"
+            },
+            "type": "library",
+            "autoload": {
+                "classmap": [
+                    "tests/MagentoTarToConnectBaseTest.php"
+                ]
+            },
+            "authors": [
+                {
+                    "name": "Alan Storm",
+                    "email": "astorm@alanstorm.com"
+                }
+            ],
+            "description": "A duct-tape shell script for packaging Magento Extenstions",
+            "support": {
+                "source": "https://github.com/astorm/MagentoTarToConnect/tree/master",
+                "issues": "https://github.com/astorm/MagentoTarToConnect/issues"
+            },
+            "time": "2014-09-24 03:02:48"
+        }
+    ],
+    "packages-dev": [],
+    "aliases": [],
+    "minimum-stability": "stable",
+    "stability-flags": {
+        "pulsestorm/magento-tar-to-connect": 20
+    },
+    "prefer-stable": false,
+    "prefer-lowest": false,
+    "platform": [],
+    "platform-dev": []
+}

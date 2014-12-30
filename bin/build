@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+echo
+echo "Removing exising distribution files..."
+rm -rf dist
+mkdir dist
+
+echo "Bundling the current extension code..."
+tar --create --dereference --file tmp.tar ./app
+
+echo "Rebundling the package in a Magento-compatible format..."
+./vendor/pulsestorm/magento-tar-to-connect/magento-tar-to-connect.phar config/extension.config.php
+rm tmp.tar
+
+echo "Creating a '-latest.tgz' distribution file for convenient linking..."
+if [[ $(find dist/*.tgz) =~ dist/(.+)-(.+)\.tgz ]]
+then
+  cp $BASH_REMATCH dist/${BASH_REMATCH[1]}-latest.tgz
+else
+  echo "Unable to find a versioned .tgz file to copy."
+  exit 1
+fi
+
+echo "Built for Magento Connect!"
+echo "The new distribution files are located in ./dist"
+exit 0
