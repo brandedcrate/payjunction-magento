@@ -4,7 +4,7 @@ This extension adds PayJunction as an optional payment method for magento. It is
 
 ## Installation
 ### Manual install
-Download a [released package] and install from the command line:
+Download a [released package](http://brandedcrate-releases.s3-website-us-west-1.amazonaws.com/?prefix=payjunction-magento/) and install from the command line:
 ~~~bash
 $ ./mage install-file Payjunction_Magento-0.1.0.tgz
 ~~~
