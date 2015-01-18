@@ -9,7 +9,7 @@ echo "Bundling the current extension code..."
 tar --create --dereference --file tmp.tar ./app
 
 echo "Rebundling the package in a Magento-compatible format..."
-./vendor/pulsestorm/magento-tar-to-connect/magento-tar-to-connect.phar config/extension.config.php
+php ./vendor/pulsestorm/magento-tar-to-connect/magento-tar-to-connect.php config/extension.config.php
 rm tmp.tar
 
 echo "Creating a '-latest.tgz' distribution file for convenient linking..."

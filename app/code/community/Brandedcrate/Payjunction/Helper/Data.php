@@ -1,20 +1,14 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: admin
- * Date: 9/21/14
- * Time: 4:41 PM
- */ 
-class Brandedcrate_Payjunction_Helper_Data extends Mage_Core_Helper_Abstract {
 
+class Brandedcrate_Payjunction_Helper_Data extends Mage_Core_Helper_Abstract {
 
     /**
      * Return message for gateway transaction request
      *
-     * @param  Mage_Payment_Model_Info $payment
-     * @param  string $requestType
-     * @param  string $lastTransactionId
-     * @param  Varien_Object $card
+     * @param Mage_Payment_Model_Info $payment
+     * @param string $requestType
+     * @param string $lastTransactionId
+     * @param Varien_Object $card
      * @param float $amount
      * @param string $exception
      * @return bool|string
@@ -26,7 +20,6 @@ class Brandedcrate_Payjunction_Helper_Data extends Mage_Core_Helper_Abstract {
             $payment, $requestType, $lastTransactionId, $card, $amount, $exception
         );
     }
-
 
     /**
      * Return message for gateway transaction request
@@ -79,7 +72,6 @@ class Brandedcrate_Payjunction_Helper_Data extends Mage_Core_Helper_Abstract {
         return call_user_func_array(array($this, '__'), array_merge(array($pattern), $texts));
     }
 
-
     /**
      * Return operation name for request type
      *
@@ -89,22 +81,20 @@ class Brandedcrate_Payjunction_Helper_Data extends Mage_Core_Helper_Abstract {
     protected function _getOperation($requestType)
     {
         switch ($requestType) {
-            case Brandedcrate_Payjunction_Model_CreditCard::REQUEST_TYPE_AUTH_ONLY:
-                return $this->__('authorize');
-            case Brandedcrate_Payjunction_Model_CreditCard::REQUEST_TYPE_AUTH_CAPTURE:
-                return $this->__('authorize and capture');
-            case Brandedcrate_Payjunction_Model_CreditCard::REQUEST_TYPE_PRIOR_AUTH_CAPTURE:
-                return $this->__('capture');
-            case Brandedcrate_Payjunction_Model_CreditCard::REQUEST_TYPE_CREDIT:
-                return $this->__('refund');
-            case Brandedcrate_Payjunction_Model_CreditCard::REQUEST_TYPE_VOID:
-                return $this->__('void');
-            default:
-                return false;
+        case Brandedcrate_Payjunction_Model_CreditCard::REQUEST_TYPE_AUTH_ONLY:
+            return $this->__('authorize');
+        case Brandedcrate_Payjunction_Model_CreditCard::REQUEST_TYPE_AUTH_CAPTURE:
+            return $this->__('authorize and capture');
+        case Brandedcrate_Payjunction_Model_CreditCard::REQUEST_TYPE_PRIOR_AUTH_CAPTURE:
+            return $this->__('capture');
+        case Brandedcrate_Payjunction_Model_CreditCard::REQUEST_TYPE_CREDIT:
+            return $this->__('refund');
+        case Brandedcrate_Payjunction_Model_CreditCard::REQUEST_TYPE_VOID:
+            return $this->__('void');
+        default:
+            return false;
         }
     }
-
-
 
     /**
      * Format price with currency sign
@@ -116,12 +106,4 @@ class Brandedcrate_Payjunction_Helper_Data extends Mage_Core_Helper_Abstract {
     {
         return $payment->getOrder()->getBaseCurrency()->formatTxt($amount);
     }
-
-
-
-
-
-
-
-
 }

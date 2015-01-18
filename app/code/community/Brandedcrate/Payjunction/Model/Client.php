@@ -61,11 +61,6 @@ class Brandedcrate_Payjunction_Model_Client extends BrandedCrate\PayJunction\Cli
         );
     }
 
-    public function readPackageVersion()
-    {
-        return "MagentoExtension/0.1.0";
-    }
-
     public function request()
     {
         switch ($this->_data['x_type']) {
@@ -123,7 +118,6 @@ class Brandedcrate_Payjunction_Model_Client extends BrandedCrate\PayJunction\Cli
             return $this->afterProcessResponse($response);
         }
     }
-
 
     public function getData($key='', $index=null)
     {
@@ -183,8 +177,6 @@ class Brandedcrate_Payjunction_Model_Client extends BrandedCrate\PayJunction\Cli
         return $default;
     }
 
-
-
     /**
      * @description sets the transaction type
      * @param $type
@@ -197,7 +189,6 @@ class Brandedcrate_Payjunction_Model_Client extends BrandedCrate\PayJunction\Cli
         return $this;
 
     }
-
 
     /**
      * @description sets the transaction method
@@ -221,7 +212,6 @@ class Brandedcrate_Payjunction_Model_Client extends BrandedCrate\PayJunction\Cli
         return $this;
     }
 
-
     /**
      * @description sets the transaction amount
      * @param decimal $amount
@@ -232,7 +222,6 @@ class Brandedcrate_Payjunction_Model_Client extends BrandedCrate\PayJunction\Cli
         $this->_data['x_amount'] = number_format($amount,$decimals);
         return $this;
     }
-
 
     /**
      * @description sets the transaction currency code
@@ -256,7 +245,6 @@ class Brandedcrate_Payjunction_Model_Client extends BrandedCrate\PayJunction\Cli
         return $this;
     }
 
-
     /**
      * @description sets the split tendered id
      * @param $split_tender_id
@@ -268,7 +256,6 @@ class Brandedcrate_Payjunction_Model_Client extends BrandedCrate\PayJunction\Cli
         return $this;
     }
 
-
     /**
      * @description sets the transaction card number
      * @param $card_number
@@ -279,7 +266,6 @@ class Brandedcrate_Payjunction_Model_Client extends BrandedCrate\PayJunction\Cli
         $this->_data['x_card_num'] = $card_number;
         return $this;
     }
-
 
     /**
      * @description sets the transaction credit card cvv or auth code
@@ -370,7 +356,6 @@ class Brandedcrate_Payjunction_Model_Client extends BrandedCrate\PayJunction\Cli
         return $this;
     }
 
-
     /**
      * @description sets the transaction country from the billing address
      * @param $country
@@ -392,7 +377,6 @@ class Brandedcrate_Payjunction_Model_Client extends BrandedCrate\PayJunction\Cli
         $this->_data['x_telephone'] = $telephone;
         return $this;
     }
-
 
     /**
      * @description sets the transaction fax from the billing address
@@ -427,7 +411,6 @@ class Brandedcrate_Payjunction_Model_Client extends BrandedCrate\PayJunction\Cli
         return $this;
     }
 
-
     /**
      * @description sets the transaction customer tax id number
      * @param $tax_id
@@ -438,8 +421,6 @@ class Brandedcrate_Payjunction_Model_Client extends BrandedCrate\PayJunction\Cli
         $this->_data['x_customer_tax_id'] = $tax_id;
         return $this;
     }
-
-
 
     /**
      * @description sets the transaction customer's email address
@@ -452,7 +433,6 @@ class Brandedcrate_Payjunction_Model_Client extends BrandedCrate\PayJunction\Cli
         return $this;
     }
 
-
     /**
      * @description sets bool to email customer or not
      * @param $email_customer
@@ -464,8 +444,6 @@ class Brandedcrate_Payjunction_Model_Client extends BrandedCrate\PayJunction\Cli
         return $this;
     }
 
-
-
     /**
      * @description sets merchant email
      * @param $merchant_email
@@ -476,8 +454,6 @@ class Brandedcrate_Payjunction_Model_Client extends BrandedCrate\PayJunction\Cli
         $this->_data['x_merchant_email'] = $merchant_email;
         return $this;
     }
-
-
 
     /**
      * @description sets ship to first name from order shipping address
@@ -502,7 +478,6 @@ class Brandedcrate_Payjunction_Model_Client extends BrandedCrate\PayJunction\Cli
         return $this;
     }
 
-
     /**
      * @description sets ship to company from order shipping address
      * @param $company
@@ -513,7 +488,6 @@ class Brandedcrate_Payjunction_Model_Client extends BrandedCrate\PayJunction\Cli
         $this->_data['x_ship_to_company'] = $company;
         return $this;
     }
-
 
     /**
      * @description sets ship to address from order shipping address
@@ -581,7 +555,6 @@ class Brandedcrate_Payjunction_Model_Client extends BrandedCrate\PayJunction\Cli
         return $this;
     }
 
-
     /**
      * @description sets the tax amount from the order
      * @param decimal $tax_amount
@@ -592,7 +565,6 @@ class Brandedcrate_Payjunction_Model_Client extends BrandedCrate\PayJunction\Cli
         $this->_data['x_tax'] = $tax_amount;
         return $this;
     }
-
 
     /**
      * @description sets the freight amount from the order
@@ -605,7 +577,6 @@ class Brandedcrate_Payjunction_Model_Client extends BrandedCrate\PayJunction\Cli
         return $this;
     }
 
-
     /**
      * @description sets the card expiration date
      * @param $expiration_date
@@ -616,7 +587,6 @@ class Brandedcrate_Payjunction_Model_Client extends BrandedCrate\PayJunction\Cli
         $this->_data['x_exp_date'] = $expiration_date;
         return $this;
     }
-
 
     /**
      * @description sets the card expiration month
@@ -629,8 +599,6 @@ class Brandedcrate_Payjunction_Model_Client extends BrandedCrate\PayJunction\Cli
         return $this;
     }
 
-
-
     /**
      * @description sets the card expiration year
      * @param $expiration_year
@@ -641,8 +609,6 @@ class Brandedcrate_Payjunction_Model_Client extends BrandedCrate\PayJunction\Cli
         $this->_data['x_exp_year'] = $expiration_year;
         return $this;
     }
-
-
 
     /**
      * @description sets the credit card cvv number
@@ -655,7 +621,6 @@ class Brandedcrate_Payjunction_Model_Client extends BrandedCrate\PayJunction\Cli
         return $this;
     }
 
-
     /**
      * @description sets the customer id for the order
      * @param $customer_id
@@ -667,8 +632,6 @@ class Brandedcrate_Payjunction_Model_Client extends BrandedCrate\PayJunction\Cli
         return $this;
     }
 
-
-
     /**
      * @description sets the transaction id
      * @param $transaction_id
@@ -679,5 +642,4 @@ class Brandedcrate_Payjunction_Model_Client extends BrandedCrate\PayJunction\Cli
         $this->_data['x_trans_id'] = $transaction_id;
         return $this;
     }
-
 }
