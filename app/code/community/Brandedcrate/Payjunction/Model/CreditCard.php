@@ -395,8 +395,9 @@ class Brandedcrate_Payjunction_Model_CreditCard extends Mage_Payment_Model_Metho
                 "code: {$result->getResponseCode()}",
                 "reason: {$result->getResponseReasonText()}",
                 "amount: {$result->getAmount()}",
-                "amount: {$result->getTransactionType()}",
-                "method: {$result->getTransactionMethod()}",
+                "type: {$result->getTransactionType()}",
+                "method: {$result->getMethod()}",
+                "approvalCode: {$result->getApprovalCode()}",
             )
         );
 
