@@ -13,7 +13,7 @@ class Brandedcrate_Payjunction_Helper_Data extends Mage_Core_Helper_Abstract {
      * @param string $exception
      * @return bool|string
      */
-    public function getTransactionMessage($payment, $requestType, $lastTransactionId, $card, $amount = false,
+    public function getTransactionMessage($payment, $requestType, $lastTransactionId, $card = false, $amount = false,
                                           $exception = false
     ) {
         return $this->getExtendedTransactionMessage(
@@ -33,7 +33,7 @@ class Brandedcrate_Payjunction_Helper_Data extends Mage_Core_Helper_Abstract {
      * @param string $additionalMessage Custom message, which will be added to the end of generated message
      * @return bool|string
      */
-    public function getExtendedTransactionMessage($payment, $requestType, $lastTransactionId, $card, $amount = false,
+    public function getExtendedTransactionMessage($payment, $requestType, $lastTransactionId, $card = false, $amount = false,
                                                   $exception = false, $additionalMessage = false
     ) {
         $operation = $this->_getOperation($requestType);
@@ -52,10 +52,14 @@ class Brandedcrate_Payjunction_Helper_Data extends Mage_Core_Helper_Abstract {
             $result = $this->__('successful');
         }
 
-        $card = $this->__('Credit Card: xxxx-%s', $card->getCcLast4());
-
-        $pattern = '%s %s %s - %s.';
-        $texts = array($card, $amount, $operation, $result);
+        if ($card) {
+            $card = $this->__('Credit Card: xxxx-%s', $card->getCcLast4());
+            $pattern = '%s %s %s - %s.';
+            $texts = array($card, $amount, $operation, $result);
+        } else {
+            $pattern = '%s %s - %s.';
+            $texts = array($amount, $operation, $result);
+        }
 
         if (!is_null($lastTransactionId)) {
             $pattern .= ' %s.';

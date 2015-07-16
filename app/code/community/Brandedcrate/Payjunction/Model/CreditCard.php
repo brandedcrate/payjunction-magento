@@ -122,6 +122,7 @@ class Brandedcrate_Payjunction_Model_CreditCard extends Mage_Payment_Model_Metho
                     )
                 );
 
+                $payment->setLastTransId($voidTransactionId);
             }
             $exceptionMessage = $result->getResponseReasonText();
             break;
@@ -151,9 +152,23 @@ class Brandedcrate_Payjunction_Model_CreditCard extends Mage_Payment_Model_Metho
         if ($amount <= 0) {
             Mage::throwException(Mage::helper('payjunction')->__('Invalid amount for capture.'));
         }
-        $this->_place($payment, $amount, self::REQUEST_TYPE_AUTH_CAPTURE);
+
+        try {
+            $this->_place($payment, $amount, self::REQUEST_TYPE_AUTH_CAPTURE);
+        } catch (\BrandedCrate\PayJunction\Exception $e) {
+            Mage::throwException(
+                Mage::helper('payjunction')
+                    ->__('From PayJunction: ' . $e->response->errors[0]->message)
+            );
+        }
 
         $payment->setSkipTransactionCreation(true);
+        return $this;
+    }
+
+    public function processInvoice($invoice, $payment)
+    {
+        $invoice->setTransactionId(1);
         return $this;
     }
 
@@ -175,6 +190,51 @@ class Brandedcrate_Payjunction_Model_CreditCard extends Mage_Payment_Model_Metho
         $payment->setSkipTransactionCreation(true);
         return $this;
     }
+
+    /**
+     * Refund the amount with transaction id
+     *
+     * @param Mage_Payment_Model_Info $payment
+     * @param decimal $amount
+     * @return Brandedcrate_Payjunction_Model_CreditCard
+     * @throws Mage_Core_Exception
+     */
+    public function refund(Varien_Object $payment, $requestedAmount)
+    {
+        // hopefully this is the capture transaction
+        $captureTransactionId = $payment->last_trans_id;
+
+        $response = $this->_getClient()->transaction()->create(array(
+            'action' => 'REFUND',
+            'transactionId' => $captureTransactionId,
+            'amountBase' => $requestedAmount
+        ));
+
+        if ($respones->response->approved) {
+            $this->_addTransaction(
+                $payment,
+                $response->transactionId,
+                Mage_Sales_Model_Order_Payment_Transaction::TYPE_REFUND,
+                array(
+                    'is_transaction_closed' => 1,
+                    'should_close_parent_transaction' => 1,
+                    'parent_transaction_id' => $captureTransactionId
+                ),
+                array($this->_realTransactionIdKey => $response->transactionId),
+                Mage::helper('payjunction')->getTransactionMessage(
+                    $payment, self::REQUEST_TYPE_CREDIT, $response->transactionId, false, $requestedAmount
+                )
+            );
+        } else {
+            Mage::throwException(
+                Mage::helper('payjunction')
+                    ->__('From PayJunction: ' . $response->response->message)
+            );
+        }
+
+        return $this;
+    }
+
 
     private function _getClientOptions()
     {
@@ -449,6 +509,8 @@ class Brandedcrate_Payjunction_Model_CreditCard extends Mage_Payment_Model_Metho
                     $payment, $requestType, $card->getLastTransId(), $card, $amount
                 )
             );
+
+            $payment->setLastTransId($card->getLastTransId());
 
             if ($requestType == self::REQUEST_TYPE_AUTH_CAPTURE) {
                 $card->setCapturedAmount($card->getProcessedAmount());
